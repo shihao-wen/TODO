@@ -1,8 +1,10 @@
 service:
-    name: todo-serverless-juadel
+    name: todo-serverless-sw
 
 plugins:
     - serverless-webpack
+    - serverless-reqvalidator-plugin
+    - serverless-aws-documentation
     - serverless-iam-roles-per-function
     - serverless-plugin-tracing
   
@@ -20,7 +22,7 @@ provider:
     environment:
       TODOS_TABLE: TodosTable-${self:provider.stage}
       USER_INDEX: UserIndex
-      S3_BUCKET: shihao-serverless-todo-${self:provider.stage}
+      S3_BUCKET: sw-serverless-todo-${self:provider.stage}
       SIGNED_EXPIRATION: 300
 
     iamRoleStatements:
@@ -30,7 +32,19 @@ provider:
           - "xray:PutTelemetryRecords"
         Resource:
           - "*"
-    
+
+custom:
+  topicName: todoTopic-${self:provider.stage}
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: ToDoApp API
+        description: Serverless application for TodoApp
+    models:
+      - name: CreateTodoRequest
+        contentType: application/json
+        schema: ${file(models/create-todo-request.json)}
     
   
 functions:
@@ -66,6 +80,12 @@ functions:
           method: post
           path: todos
           cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new Todo
+            description: Create a new Todo
+            requestModels: 
+              'application/json': CreateTodoRequest
     iamRoleStatementsInherit: true
     iamRoleStatementsName: ${self:service.name}-create-todo-role-${self:provider.stage}
     iamRoleStatements:
@@ -180,7 +200,16 @@ resources:
                 - DELETE
                 - HEAD
               MaxAge: 3000
-  
+
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+
     BucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
