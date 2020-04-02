@@ -1,5 +1,5 @@
 import 'source-map-support/register'
-import { updateTodo } from "../../BusinessLogic/todoItems"
+import { updateTodo } from "../../BusinessLogic/TODO"
 import {
   APIGatewayProxyEvent,
   APIGatewayProxyHandler,

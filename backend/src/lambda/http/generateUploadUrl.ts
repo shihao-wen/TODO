@@ -1,5 +1,5 @@
 import 'source-map-support/register';
-import {generateUploadUrl} from '../../BusinessLogic/todoItems';
+import { generateUploadUrl } from '../../BusinessLogic/TODO';
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda';
 
@@ -13,7 +13,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Credentials': true
     },
-    body: JSON.stringify({msg:"Signed URL created",
+    body: JSON.stringify({
+      msg: "Signed URL created",
       uploadUrl
     })
   }

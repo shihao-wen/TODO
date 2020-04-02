@@ -3,10 +3,10 @@ service:
 
 plugins:
     - serverless-webpack
+    - serverless-plugin-tracing
     - serverless-reqvalidator-plugin
     - serverless-aws-documentation
     - serverless-iam-roles-per-function
-    - serverless-plugin-tracing
   
 provider:
     name: aws
@@ -14,14 +14,6 @@ provider:
   
     stage: ${opt:stage, 'dev'}
     region: ${opt:region, 'us-east-1'}
-
-    iamRoleStatements:
-      - Effect: "Allow"
-        Action: 
-          - "xray:PutTraceSegments"
-          - "xray:PutTelemetryRecords"
-        Resource:
-          - "*"
 
     tracing:
       lambda: true
@@ -33,6 +25,13 @@ provider:
       S3_BUCKET: sw-serverless-todo-${self:provider.stage}
       SIGNED_EXPIRATION: 300
 
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action: 
+          - "xray:PutTraceSegments"
+          - "xray:PutTelemetryRecords"
+        Resource:
+          - "*"
 
 custom:
   topicName: todoTopic-${self:provider.stage}
@@ -51,7 +50,6 @@ custom:
 functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
-  
   GetTodos:
     handler: src/lambda/http/getTodos.handler
     events:
@@ -70,7 +68,6 @@ functions:
         Action:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_INDEX}
-
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
     events:
@@ -91,8 +88,6 @@ functions:
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      
-  
   UpdateTodo:
     handler: src/lambda/http/updateTodo.handler
     events:
@@ -107,8 +102,7 @@ functions:
         Action:
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      
-  
+
   DeleteTodo:
     handler: src/lambda/http/deleteTodo.handler
     events:
@@ -124,7 +118,6 @@ functions:
           - dynamodb:DeleteItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       
-  
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
     events:
@@ -148,6 +141,7 @@ functions:
   
 resources:
   Resources:
+     # TODO: Add any necessary AWS resources
     TodosTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -189,8 +183,8 @@ resources:
                 - GET
                 - PUT
                 - POST
-                - DELETE
                 - HEAD
+                - DELETE
               MaxAge: 2000
 
     RequestBodyValidator:
